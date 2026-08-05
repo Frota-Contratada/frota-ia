@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException 
 from schemas.request import RequestSchema
 from schemas.response import ExtracaoSchema, FornecedorSchema, VeiculoSchema, ContratoSchema, ModalidadeSchema, RegraSchema, CondicaoRegraSchema 
-from services.processador_pdf import extrair_texto_contrato
+from services.processador_pdf import extrair_texto_pdf
 from services.extrator import extrair_dados_contrato, carregar_prompt
 
 extraction_router = APIRouter(prefix="/extrair", tags=["Extração"])
@@ -16,7 +16,9 @@ async def extrair_texto(file_path: RequestSchema):
 
 
     # Etapa 1: extrai o texto do contratp
-    paginas_extraidas = extrair_texto_contrato(file_path.ds_caminho_arquivo)
+    paginas_extraidas = extrair_texto_pdf(file_path.ds_caminho_arquivo)
+
+    print(paginas_extraidas)
     if not paginas_extraidas:
         raise HTTPException(status_code=400, detail="Falha na extração do texto do contrato.")
 
@@ -32,17 +34,3 @@ async def extrair_texto(file_path: RequestSchema):
     return {
         "Dados": dados_extraidos
         }
-
-
-"""
-Ordem da rota:
-1. Receber o caminho do arquivo (ou id do contrato)
-2. Chamar a função extract_text_contract 
-3. receber o retorno de texto
-4. Mandar ao gemini (arquivo com provável função de extração de regras)
-5. pegar o retorno em json
-6. retornar isso da api
-7. verificação de erros
-
-
-"""
