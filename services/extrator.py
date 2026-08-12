@@ -7,16 +7,13 @@ from app.config import Settings
 settings = Settings()
 client = Client(api_key=settings.gemini_api_key)
 
-# Lendo o arquivo de prompt
 caminho_prompt = Path(__file__).parent.parent / "prompts" / "extracao_prompt.txt"
 
 def carregar_prompt(caminho_prompt: str):
     with open(caminho_prompt, "r", encoding="utf-8") as file:
         return file.read()
 
-
 def extrair_dados_contrato(texto: str):
-
     template = carregar_prompt(caminho_prompt)
     texto = "\n\n".join(texto)
     system_prompt = template.replace("{texto_contrato}", texto)

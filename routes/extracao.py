@@ -37,7 +37,7 @@ async def extrair_texto(file_path: RequestSchema):
 """
 Ordem da rota:
 1. Receber o caminho do arquivo (ou id do contrato)
-2. Chamar a função extract_text_contract 
+2. Chamar a função extrair_dados_contrato 
 3. receber o retorno de texto
 4. Mandar ao gemini (arquivo com provável função de extração de regras)
 5. pegar o retorno em json
