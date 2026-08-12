@@ -14,10 +14,12 @@ def carregar_prompt(caminho_prompt: str):
     with open(caminho_prompt, "r", encoding="utf-8") as file:
         return file.read()
 
-def validar_extracao(dados_brutos: dict):
+def validar_extracao(dados_brutos: dict, texto_extraido: dict):
     template = carregar_prompt(caminho_prompt)
-    texto = json.dumps(dados_brutos, ensure_ascii=False, indent=2)
-    system_prompt = template.replace("{json_bruto}", texto)
+    json_extraido = json.dumps(dados_brutos, ensure_ascii=False, indent=2)
+    texto_extraido = json.dumps(texto_extraido, ensure_ascii=False, indent=2)
+    system_prompt = template.replace("{json_bruto}", json_extraido)\
+                       .replace("{texto_extraido}", texto_extraido)
 
     try:
         print("[Validador] Enviando prompt para o validador...")
