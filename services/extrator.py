@@ -19,8 +19,9 @@ def extrair_dados_contrato(texto: str):
     system_prompt = template.replace("{texto_contrato}", texto)
 
     try:
+        print("[Gemini] Enviando prompt para o Gemini...")
         response = client.models.generate_content(
-            model="gemini-3.5-flash",
+            model="gemini-3-flash-preview",
             contents=system_prompt
         )
         template_json = response.text.strip()
