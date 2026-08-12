@@ -30,7 +30,7 @@ async def extrair_texto(file_path: RequestSchema):
         dados_extraidos = extrair_dados_contrato(paginas_extraidas)
 
         # Etapa 4: valida os dados extraídos
-        dados_validados = validar_extracao(dados_extraidos)
+        dados_validados = validar_extracao(dados_extraidos, paginas_extraidas)
 
     except ValueError as e:
         raise HTTPException(status_code=500, detail=str(e))
