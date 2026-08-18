@@ -6,7 +6,6 @@ import pytesseract
 import re
 import fitz
 
-
 # Configura codificação do stdout para UTF-8 no Windows caso necessário
 if sys.stdout.encoding != 'utf-8':
     try:
