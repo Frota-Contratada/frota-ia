@@ -1,9 +1,7 @@
 import json
 from pathlib import Path
-# from google.genai import Client
 from app.config import settings
-from google.genai.types import GenerateContentConfig
-from app.config import Settings
+from xai_sdk import Client
 
 caminho_prompt = Path(__file__).parent.parent / "prompts" / "validacao_prompt.txt"
 
@@ -11,9 +9,6 @@ def carregar_prompt(caminho_prompt: str):
     with open(caminho_prompt, "r", encoding="utf-8") as file:
         return file.read()
 
-import os
-from xai_sdk import Client
-from xai_sdk.chat import user
 
 client = Client(api_key=settings.grok_api_key)
 
