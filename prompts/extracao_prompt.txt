@@ -54,6 +54,7 @@ O mesmo ENUM deve ser utilizado em `condicoes`.
 Preço fixo predefinido para um trecho, rota, origem/destino, cidade, unidade ou viagem específica.
 Utilize `nr_valor_fixo`.
 Quando o contrato informar a localidade à qual o preço se aplica, utilize `localidade`.
+Caso teha uma regra específica para a localidade, adicione essa regra também. Ex.: "Preço fixo de R$30,00 para viagens ao Germinare" -> localidade: Germinare.
 
 ## VALOR_POR_KM
 Cobrança baseada na quantidade de quilômetros percorridos.
@@ -86,6 +87,7 @@ Exemplos:
 
 `qnt_espera` deve ser um número inteiro positivo e só deve ser incluído quando a quantidade estiver explicitamente indicada no contrato.
 Não invente `tipo_espera` ou `qnt_espera`.
+Se essa regra conter uma localidade específica para o tempo de espera, adicione o campo localidade.
 
 ## PARADAS_ADICIONAIS
 Cobrança adicional por parada, endereço, destino ou desvio adicional durante a corrida.
@@ -96,6 +98,7 @@ Diferenciação de preço ou cobrança conforme o tipo de veículo.
 Utilize `nm_tipo_veiculo`.
 O tipo de veículo deve obrigatoriamente pertencer a `{tipos_veiculo}`.
 O valor deve ser registrado no campo financeiro correspondente.
+Nomes do veículo no plural também fazem parte do tipo. Ex.:"vans para transporte por R$4,00 por quilômetro" -> tipo: VAN.
 
 ## PEDAGIO
 Inclusão, cobrança, reembolso ou cálculo de pedágios relacionados à corrida.
@@ -193,6 +196,7 @@ Se um dado do fornecedor não estiver presente, pode ser `null`.
 
 # CONTRATO
 `contrato` contém as datas de vigência explicitamente identificadas no contrato.
+As datas de orçamento podem valer como data inicial do contrato.
 Se uma data não estiver presente, pode ser `null`.
 
 # CONFIANÇA
@@ -271,7 +275,7 @@ Retorne apenas o JSON válido.
 Não escreva explicações, comentários ou Markdown.
 
 # TIPOS DE VEÍCULOS VÁLIDOS
-['CARRO', 'MOTO', 'FURGAO', 'VAN']
+['CARRO', 'MOTO', 'FURGAO', 'VAN', 'CAMINHAO']
 
 # TEXTO DO CONTRATO
 """
