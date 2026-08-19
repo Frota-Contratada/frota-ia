@@ -13,24 +13,28 @@ if sys.stdout.encoding != 'utf-8':
     except Exception:
         pass
 
-def extrair_texto_pdf(caminho_pdf : str) -> list[str]:
+def extrair_texto_pdf(origem_pdf: bytes | str) -> list[str]:
     """
     Extrai todo o texto de um arquivo PDF, retornando uma lista de strings.
 
     Parâmetros:
-        caminho_pdf (str): Caminho para o arquivo PDF.
+        origem_pdf (bytes | str): Buffer em bytes do PDF ou caminho para o arquivo PDF.
 
     Retorna:
         list[str]: Lista de strings onde o índice [0] representa a primeira página,
                    índice [1] a segunda página, e assim por diante.
     """
-    if not os.path.exists(caminho_pdf):
-        raise FileNotFoundError(f"Erro: O arquivo '{caminho_pdf}' não foi encontrado.")
+    if isinstance(origem_pdf, str):
+        if not os.path.exists(origem_pdf):
+            raise FileNotFoundError(f"Erro: O arquivo '{origem_pdf}' não foi encontrado.")
+        print(f"[PDF] Lendo arquivo: {origem_pdf}")
+        doc = fitz.open(origem_pdf)
+    elif isinstance(origem_pdf, bytes):
+        print(f"[PDF] Lendo arquivo a partir de buffer ({len(origem_pdf)} bytes)")
+        doc = fitz.open(stream=origem_pdf, filetype="pdf")
+    else:
+        raise TypeError("O parâmetro 'origem_pdf' deve ser do tipo bytes ou str.")
 
-    print(f"[PDF] Lendo arquivo: {caminho_pdf}")
-    
-    # Abre o documento PDF
-    doc = fitz.open(caminho_pdf)
     total_paginas = len(doc)
     paginas_texto = []
 
