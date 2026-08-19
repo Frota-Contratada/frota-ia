@@ -3,9 +3,11 @@ from pathlib import Path
 from google.genai import Client
 from google.genai.types import GenerateContentConfig
 from app.config import Settings
+from groq import Groq
+
 
 settings = Settings()
-client = Client(api_key=settings.gemini_api_key)
+client = Groq(api_key=settings.groq_api_key)
 
 caminho_prompt = Path(__file__).parent.parent / "prompts" / "extracao_prompt.txt"
 
@@ -19,12 +21,17 @@ def extrair_dados_contrato(texto: str):
     system_prompt = template.replace("{texto_contrato}", texto)
 
     try:
-        print("[Gemini] Enviando prompt para o Gemini...")
-        response = client.models.generate_content(
-            model="gemini-3-flash-preview",
-            contents=system_prompt
+        print("[Groq] Enviando prompt para o Groq...")
+        response = client.chat.completions.create(
+            model="openai/gpt-oss-120b",
+            messages=[
+                {
+                    "role": "system", 
+                    "content": system_prompt
+                 }
+            ]
         )
-        template_json = response.text.strip()
+        template_json = response.choices[0].message.content.strip()
         template_json = template_json.removeprefix("```json").removesuffix("```").strip()
         return json.loads(template_json)
 
@@ -33,7 +40,7 @@ def extrair_dados_contrato(texto: str):
             "extracao": {
                 "status": "falha",
                 "confianca_geral": 0.0,
-                "observacoes": ["Gemini retornou resposta fora do formato JSON esperado"]
+                "observacoes": ["Groq retornou resposta fora do formato JSON esperado"]
             },
             "fornecedor": None,
             "veiculo": [],
