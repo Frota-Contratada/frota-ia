@@ -1,10 +1,7 @@
 import json
 from pathlib import Path
-from google.genai import Client
-from google.genai.types import GenerateContentConfig
 from app.config import Settings
 from groq import Groq
-
 
 settings = Settings()
 client = Groq(api_key=settings.groq_api_key)

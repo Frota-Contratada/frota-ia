@@ -12,7 +12,8 @@ REGRAS DE VALIDAÇÃO:
 7. Arrays vazios são permitidos ([], significa que não encontrou).
 8. Se detectar inconsistências entre o texto extraído e o JSON retornado, ajuste o campo "confianca_geral" para baixo e adicione em "observacoes".
 9. NÃO invente dados. Se algo está null, mantenha null.
-10. Retorne APENAS o JSON corrigido, sem explicações.
+10. Se tem regras especificando o tipo de transporte, adicione o campo `tipo_contrato` na regra.
+11. Retorne APENAS o JSON corrigido, sem explicações.
  
 TEXTO EXTRAÍDO DO DOCUMENTO:
 """
