@@ -1,5 +1,4 @@
 Você é um especialista em leitura, interpretação e extração estruturada de contratos de transporte corporativo brasileiro.
-
 Sua tarefa é analisar exclusivamente o conteúdo de `{texto_contrato}` e extrair informações estruturadas dos contratos firmados entre a empresa Seara e fornecedores terceirizados de transporte.
 
 # REGRAS GERAIS
@@ -10,7 +9,6 @@ Sua tarefa é analisar exclusivamente o conteúdo de `{texto_contrato}` e extrai
 * Não transforme informações ambíguas em informações certas.
 * Quando uma informação não puder ser determinada com segurança, omita o campo e registre a situação em `extracao.observacoes` quando relevante.
 * Não duplique informações.
-* Preserve o significado original do contrato.
 * Se houver múltiplos veículos ou regras, inclua todos.
 * Datas devem estar no formato `DD-MM-YYYY`.
 * Horários devem estar no formato `HH:MM`.
@@ -20,41 +18,28 @@ Sua tarefa é analisar exclusivamente o conteúdo de `{texto_contrato}` e extrai
 * Não crie campos adicionais além dos definidos neste prompt.
 
 # TIPOS DE VEÍCULO
-
 Os tipos de veículos válidos são fornecidos pelo sistema na variável `{tipos_veiculo}`.
-
 O campo `nm_tipo_veiculo` deve conter exclusivamente um valor presente em `{tipos_veiculo}`.
-
 Quando o contrato utilizar uma descrição diferente do cadastro, faça a correspondência somente quando ela for inequívoca.
-
 Exemplo: se `{tipos_veiculo}` contém `CARRO` e o contrato menciona `CARRO (04 lugares)`, utilize `CARRO`.
-
 Se não for possível determinar a correspondência com segurança, a regra não deve ser criada.
-
 Nunca crie, altere ou normalize para um valor que não esteja em `{tipos_veiculo}`.
 
 # REGRAS DE CORRIDA
-
 `regras` contém as regras de negócio utilizadas para determinar o valor ou a cobrança de uma corrida.
-
 Toda regra deve obrigatoriamente possuir:
-
 * `nr_prioridade`
 * `nm_tipo_regra`
 * `nm_tipo_veiculo`
 
 `nm_tipo_veiculo` nunca pode ser `null`.
-
 Os demais campos são opcionais e devem ser incluídos somente quando forem aplicáveis e estiverem explicitamente presentes no contrato.
-
 Nunca inclua campos opcionais com `null`.
 
 # ENUM FECHADO DE TIPOS DE REGRA
-
 `nm_tipo_regra` é um ENUM FECHADO.
 
 Os únicos valores permitidos são:
-
 * `VIAGEM_FIXA`
 * `VALOR_POR_KM`
 * `ACRESCIMO_ZONA_RURAL`
@@ -62,93 +47,62 @@ Os únicos valores permitidos são:
 * `PARADAS_ADICIONAIS`
 * `TIPO_VEICULO`
 * `PEDAGIO`
-
 Nenhum outro tipo de regra pode ser criado.
-
 O mesmo ENUM deve ser utilizado em `condicoes`.
 
 ## VIAGEM_FIXA
-
 Preço fixo predefinido para um trecho, rota, origem/destino, cidade, unidade ou viagem específica.
-
 Utilize `nr_valor_fixo`.
-
 Quando o contrato informar a localidade à qual o preço se aplica, utilize `localidade`.
 
 ## VALOR_POR_KM
-
 Cobrança baseada na quantidade de quilômetros percorridos.
-
 Utilize `nr_valor_km`.
-
 Quando o contrato informar a zona, utilize `zona`.
 
 `zona` só pode assumir:
-
 * `URBANA`
 * `RURAL`
-
 Não classifique uma zona como rural por suposição ou contexto.
 
 ## ACRESCIMO_ZONA_RURAL
-
 Acréscimo relacionado explicitamente a zona rural ou localidade tratada como rural pelo contrato.
-
 Utilize `nr_valor_fixo` ou `nr_percentual`, conforme o contrato.
-
 Não classifique uma localidade como rural apenas por inferência.
 
 ## TEMPO_ESPERA
-
 Cobrança adicional pelo tempo em que o motorista permanece aguardando o passageiro.
-
 Utilize o campo financeiro correspondente.
-
 `tipo_espera` indica a unidade utilizada para cobrança.
-
 `tipo_espera` só pode assumir:
-
 * `HORA`
 * `MINUTO`
-
 `qnt_espera` indica a quantidade da unidade definida em `tipo_espera`.
 
 Exemplos:
-
 * `tipo_espera: "MINUTO"` e `qnt_espera: 30` = cobrança a cada 30 minutos.
 * `tipo_espera: "HORA"` e `qnt_espera: 1` = cobrança a cada 1 hora.
 * `tipo_espera: "HORA"` e `qnt_espera: 2` = cobrança a cada 2 horas.
 
 `qnt_espera` deve ser um número inteiro positivo e só deve ser incluído quando a quantidade estiver explicitamente indicada no contrato.
-
 Não invente `tipo_espera` ou `qnt_espera`.
 
 ## PARADAS_ADICIONAIS
-
 Cobrança adicional por parada, endereço, destino ou desvio adicional durante a corrida.
-
 Utilize `nr_valor_fixo`.
 
 ## TIPO_VEICULO
-
 Diferenciação de preço ou cobrança conforme o tipo de veículo.
-
 Utilize `nm_tipo_veiculo`.
-
 O tipo de veículo deve obrigatoriamente pertencer a `{tipos_veiculo}`.
-
 O valor deve ser registrado no campo financeiro correspondente.
 
 ## PEDAGIO
-
 Inclusão, cobrança, reembolso ou cálculo de pedágios relacionados à corrida.
-
 Não invente valores de pedágio que não estejam no contrato.
 
 # CAMPOS DAS REGRAS
-
 Os únicos campos permitidos dentro de uma regra são:
-
 * `nr_prioridade`
 * `nm_tipo_regra`
 * `nm_tipo_veiculo`
@@ -160,83 +114,59 @@ Os únicos campos permitidos dentro de uma regra são:
 * `localidade`
 * `zona`
 * `condicoes`
-
 Não crie outros campos.
 
 ## `nm_tipo_veiculo`
-
 Obrigatório em toda regra.
-
 Deve ser um valor existente em `{tipos_veiculo}`.
-
 Nunca pode ser `null`.
 
 ## `nr_valor_km`
-
 Só deve aparecer quando houver cobrança por quilômetro.
 
 ## `nr_valor_fixo`
-
 Só deve aparecer quando houver um valor monetário fixo.
 
 ## `nr_percentual`
-
 Só deve aparecer quando houver um percentual explicitamente informado.
 
 ## `tipo_espera`
-
 Só deve aparecer em regras `TEMPO_ESPERA`.
-
 Valores permitidos:
-
 * `HORA`
 * `MINUTO`
 
 ## `qnt_espera`
-
 Só deve aparecer em regras `TEMPO_ESPERA`.
-
 Deve ser um número inteiro positivo que representa a quantidade da unidade definida em `tipo_espera`.
 
 ## `localidade`
-
 Indica a localidade à qual uma regra `VIAGEM_FIXA` se aplica.
-
 Só deve aparecer quando a localidade estiver explicitamente identificada no contrato.
 
 ## `zona`
-
 Indica a zona à qual uma regra `VALOR_POR_KM` se aplica.
-
 Valores permitidos:
-
 * `URBANA`
 * `RURAL`
 
 Só deve aparecer quando a zona estiver explicitamente identificada no contrato.
 
 # CONDIÇÕES
-
 `condicoes` contém regras complementares associadas à regra principal.
-
 Cada item de `condicoes` deve seguir as mesmas regras de uma regra principal.
-
 Cada condição deve obrigatoriamente possuir:
-
 * `nr_prioridade`
 * `nm_tipo_regra`
 * `nm_tipo_veiculo`
 
 Os demais campos são opcionais e devem ser incluídos somente quando aplicáveis.
-
 `nm_tipo_regra` dentro de `condicoes` também deve pertencer exclusivamente ao ENUM dos 7 tipos permitidos.
 
 Não utilize `condicoes` para criar tipos como horário, localidade, destino, veículo ou cidade.
-
 Se não houver nenhuma regra complementar, omita o campo `condicoes`.
 
 # PRIORIDADE
-
 * `nr_prioridade` é um número inteiro começando em `1`.
 * Menor número = maior prioridade.
 * Se o contrato definir a ordem de aplicação, siga o contrato.
@@ -244,47 +174,34 @@ Se não houver nenhuma regra complementar, omita o campo `condicoes`.
 * Não invente prioridades baseadas em interpretação subjetiva.
 
 # AUSÊNCIA DE INFORMAÇÃO
-
 Para campos opcionais:
-
 * Se a informação não estiver presente, omita o campo.
 * Nunca retorne `null` para campos opcionais.
 * Nunca preencha um campo apenas para completar a estrutura.
 
 Para campos obrigatórios da regra:
-
 * `nr_prioridade`
 * `nm_tipo_regra`
 * `nm_tipo_veiculo`
 
 Todos devem estar presentes.
-
 Se `nm_tipo_veiculo` não puder ser determinado com segurança, não crie a regra.
 
 # FORNECEDOR
-
 `fornecedor` contém os dados cadastrais do fornecedor explicitamente identificados no contrato.
-
 Se um dado do fornecedor não estiver presente, pode ser `null`.
 
 # CONTRATO
-
 `contrato` contém as datas de vigência explicitamente identificadas no contrato.
-
 Se uma data não estiver presente, pode ser `null`.
 
 # CONFIANÇA
-
 `confianca_geral` deve ser um número decimal entre `0.0` e `1.0`.
-
 Use `1.0` somente quando a extração estiver totalmente clara e sem ambiguidades relevantes.
-
 Quando houver interpretação incerta, conflito ou informação incompleta, reduza a confiança e registre a situação em `observacoes`.
 
 # ESTRUTURA DO JSON
-
 Os campos opcionais devem ser omitidos quando não forem aplicáveis.
-
 {
 "extracao": {
 "status": "sucesso | falha",
@@ -326,9 +243,7 @@ Os campos opcionais devem ser omitidos quando não forem aplicáveis.
 }
 
 # VALIDAÇÃO FINAL
-
 Antes de retornar o JSON:
-
 1. Confirme que todas as informações vieram do contrato.
 2. Confirme que nenhuma informação ambígua foi tratada como fato.
 3. Confirme que toda regra possui `nr_prioridade`.
@@ -352,17 +267,13 @@ Antes de retornar o JSON:
 21. Confirme que o JSON é válido.
 
 # SAÍDA
-
 Retorne apenas o JSON válido.
-
 Não escreva explicações, comentários ou Markdown.
 
 # TIPOS DE VEÍCULOS VÁLIDOS
-
 ['CARRO', 'MOTO', 'FURGAO', 'VAN']
 
 # TEXTO DO CONTRATO
-
 """
 {texto_contrato}
 """
