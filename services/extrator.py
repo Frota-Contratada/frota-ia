@@ -1,9 +1,9 @@
 import json
 from pathlib import Path
-from app.config import Settings
+from app.config import settings
 from groq import Groq
+from services.database import get_tipos_veiculo, get_tipos_contrato
 
-settings = Settings()
 client = Groq(api_key=settings.groq_api_key)
 
 caminho_prompt = Path(__file__).parent.parent / "prompts" / "extracao_prompt.txt"
@@ -12,10 +12,20 @@ def carregar_prompt(caminho_prompt: str):
     with open(caminho_prompt, "r", encoding="utf-8") as file:
         return file.read()
 
-def extrair_dados_contrato(texto: str):
+def extrair_dados_contrato(texto: list[str] | str):
     template = carregar_prompt(caminho_prompt)
-    texto = "\n\n".join(texto)
-    system_prompt = template.replace("{texto_contrato}", texto)
+    if isinstance(texto, list):
+        texto = "\n\n".join(texto)
+
+    tipos_veiculo = get_tipos_veiculo()
+    tipos_contrato = get_tipos_contrato()
+
+    system_prompt = (
+        template
+        .replace("{tipos_veiculo}", str(tipos_veiculo))
+        .replace("{tipos_contrato}", str(tipos_contrato))
+        .replace("{texto_contrato}", texto)
+    )
 
     try:
         print("[Groq] Enviando prompt para o Groq...")

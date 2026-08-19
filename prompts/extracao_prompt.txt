@@ -290,10 +290,10 @@ Retorne apenas o JSON válido.
 Não escreva explicações, comentários ou Markdown.
 
 # TIPOS DE VEÍCULOS VÁLIDOS
-['CARRO', 'MOTO', 'FURGAO', 'VAN', 'CAMINHAO']
+{tipos_veiculo}
 
-# TIPSO DE CONTRATOS VÁLIDOS
-['PASSAGEIRO', 'DOCUMENTO', 'CARGA']
+# TIPOS DE CONTRATOS VÁLIDOS
+{tipos_contrato}
 
 # TEXTO DO CONTRATO
 """
