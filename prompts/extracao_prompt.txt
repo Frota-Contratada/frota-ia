@@ -17,6 +17,13 @@ Sua tarefa é analisar exclusivamente o conteúdo de `{texto_contrato}` e extrai
 * CPF/CNPJ devem conter somente números.
 * Não crie campos adicionais além dos definidos neste prompt.
 
+# TIPO_CONTRATO
+Conforme os tipos de contratos válidos, classifique para quais categorias o contrato servirá.
+Um contrato pode ter mais de um tipo de contrato
+Caso uma regra cite a funcionalidade da corrida, adicione o campo `tipo_contrato` e adicione um valor válido.
+Se o documento citar "Táxi para transporte de passageiros", "caminhão de insumos" veja o tipo de contrato e adicione o campo com valro adequado.
+Caso a regra não especifique o tipo de corrida, não adicione o campo.
+
 # TIPOS DE VEÍCULO
 Os tipos de veículos válidos são fornecidos pelo sistema na variável `{tipos_veiculo}`.
 O campo `nm_tipo_veiculo` deve conter exclusivamente um valor presente em `{tipos_veiculo}`.
@@ -31,6 +38,12 @@ Toda regra deve obrigatoriamente possuir:
 * `nr_prioridade`
 * `nm_tipo_regra`
 * `nm_tipo_veiculo`
+* `tipo_contrato` (opcional)
+
+`tipo contrato` é um campo opcional, não adicione no JSON caso não ache correspondência.
+Caso uma regra cite a funcionalidade da corrida, adicione ao campo `tipo_contrato` e adicione um valor válido.
+Caso a regra não especifique o tipo de corrida, não adicione o campo.
+
 
 `nm_tipo_veiculo` nunca pode ser `null`.
 Os demais campos são opcionais e devem ser incluídos somente quando forem aplicáveis e estiverem explicitamente presentes no contrato.
@@ -212,6 +225,7 @@ Os campos opcionais devem ser omitidos quando não forem aplicáveis.
 "confianca_geral": 0.0,
 "observacoes": []
 },
+"tipo_contrato": [],
 "fornecedor": {
 "nm_fornecedor": null,
 "cnpj_cpf": null
@@ -233,7 +247,8 @@ Os campos opcionais devem ser omitidos quando não forem aplicáveis.
 "nm_tipo_regra": "VALOR_POR_KM",
 "nm_tipo_veiculo": "CARRO",
 "nr_valor_km": 1.80,
-"zona": "URBANA"
+"zona": "URBANA",
+"tipo_contrato": "DOCUMENTO"
 },
 {
 "nr_prioridade": 3,
@@ -276,6 +291,9 @@ Não escreva explicações, comentários ou Markdown.
 
 # TIPOS DE VEÍCULOS VÁLIDOS
 ['CARRO', 'MOTO', 'FURGAO', 'VAN', 'CAMINHAO']
+
+# TIPSO DE CONTRATOS VÁLIDOS
+['PASSAGEIRO', 'DOCUMENTO', 'CARGA']
 
 # TEXTO DO CONTRATO
 """
