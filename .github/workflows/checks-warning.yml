@@ -1,0 +1,136 @@
+name: IA Checks
+
+on:
+  pull_request:
+    branches:
+      - main
+
+  push:
+    branches:
+      - main
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    name: Validate IA
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        id: python
+        continue-on-error: true
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Validate dependency manifest
+        id: manifest
+        continue-on-error: true
+        shell: bash
+        run: |
+          if [ -f requirements.txt ] || [ -f pyproject.toml ]; then
+            exit 0
+          fi
+
+          echo "requirements.txt ou pyproject.toml nao encontrado."
+          exit 1
+
+      - name: Validate Python syntax
+        id: syntax
+        continue-on-error: true
+        run: |
+          python -m compileall -q app routes schemas services
+
+      - name: Install validation tools
+        id: tools
+        continue-on-error: true
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install ruff pytest
+
+      - name: Lint
+        id: lint
+        continue-on-error: true
+        run: |
+          python -m ruff check .
+
+      - name: Install application dependencies
+        id: dependencies
+        continue-on-error: true
+        shell: bash
+        run: |
+          if [ -f requirements.txt ]; then
+            python -m pip install -r requirements.txt
+          elif [ -f pyproject.toml ]; then
+            python -m pip install .
+          else
+            echo "Manifesto de dependencias ainda nao existe."
+            exit 1
+          fi
+
+      - name: Import FastAPI application
+        id: import_app
+        continue-on-error: true
+        run: |
+          python -c "from app.main import app; print(type(app).__name__)"
+
+      - name: Tests
+        id: tests
+        continue-on-error: true
+        shell: bash
+        run: |
+          if find . -type f \( -name "test_*.py" -o -name "*_test.py" \) | grep -q .; then
+            python -m pytest -q
+          else
+            echo "Nenhum teste Python encontrado."
+            exit 1
+          fi
+
+      - name: Validate production image
+        id: docker
+        continue-on-error: true
+        shell: bash
+        run: |
+          if [ ! -f Dockerfile ]; then
+            echo "Dockerfile ainda nao criado."
+            exit 1
+          fi
+
+          docker build \
+            -t frota-ia:ci \
+            .
+
+      - name: Summary
+        if: always()
+        shell: bash
+        run: |
+          echo "## IA checks" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Check | Status |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| --- | --- |" >> "$GITHUB_STEP_SUMMARY"
+
+          result() {
+            if [ "$2" = "success" ]; then
+              echo "| $1 | PASSED |" >> "$GITHUB_STEP_SUMMARY"
+            else
+              echo "| $1 | WARNING: $2 |" >> "$GITHUB_STEP_SUMMARY"
+              echo "::warning::$1: $2"
+            fi
+          }
+
+          result "Python" "${{ steps.python.outcome }}"
+          result "Dependency manifest" "${{ steps.manifest.outcome }}"
+          result "Python syntax" "${{ steps.syntax.outcome }}"
+          result "Validation tools" "${{ steps.tools.outcome }}"
+          result "Lint" "${{ steps.lint.outcome }}"
+          result "Dependencies" "${{ steps.dependencies.outcome }}"
+          result "FastAPI import" "${{ steps.import_app.outcome }}"
+          result "Tests" "${{ steps.tests.outcome }}"
+          result "Docker image" "${{ steps.docker.outcome }}"
