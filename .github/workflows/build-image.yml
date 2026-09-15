@@ -1,0 +1,186 @@
+name: Build IA Image
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "Dockerfile"
+      - ".dockerignore"
+      - "requirements.txt"
+      - "app/**"
+      - "routes/**"
+      - "schemas/**"
+      - "services/**"
+      - "prompts/**"
+      - ".github/workflows/build-image.yml"
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build IA image
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Define image metadata
+        id: meta
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          SHORT_SHA="${GITHUB_SHA::12}"
+
+          echo "short_sha=$SHORT_SHA" >> "$GITHUB_OUTPUT"
+          echo "image=frota-ia:$SHORT_SHA" >> "$GITHUB_OUTPUT"
+          echo "archive=frota-ia-$SHORT_SHA.tar" >> "$GITHUB_OUTPUT"
+
+      - name: Build production image
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          docker build \
+            --platform linux/amd64 \
+            --tag "${{ steps.meta.outputs.image }}" \
+            .
+
+      - name: Validate installed system dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          docker run \
+            --rm \
+            --entrypoint sh \
+            "${{ steps.meta.outputs.image }}" \
+            -c '
+              python --version
+              tesseract --version
+              tesseract --list-langs
+              odbcinst -q -d
+              python -m compileall -q /app
+            '
+
+      - name: Validate Python imports
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          docker run \
+            --rm \
+            --env GROQ_API_KEY=ci-placeholder \
+            --env GROK_API_KEY=ci-placeholder \
+            --env CONNECTION_DBGFC= \
+            --entrypoint python \
+            "${{ steps.meta.outputs.image }}" \
+            -c "
+          import fastapi
+          import uvicorn
+          import pyodbc
+          import fitz
+          import pytesseract
+          import PIL
+          import groq
+          import xai_sdk
+          from app.main import app
+          print('Imports OK')
+          "
+
+      - name: Smoke test
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          docker run \
+            --detach \
+            --name frota-ia-ci \
+            --env GROQ_API_KEY=ci-placeholder \
+            --env GROK_API_KEY=ci-placeholder \
+            --env CONNECTION_DBGFC= \
+            --publish 127.0.0.1:18083:8000 \
+            "${{ steps.meta.outputs.image }}"
+
+          cleanup() {
+            docker rm -f frota-ia-ci >/dev/null 2>&1 || true
+          }
+
+          trap cleanup EXIT
+
+          for i in $(seq 1 45); do
+            if curl \
+              --fail \
+              --silent \
+              --show-error \
+              http://127.0.0.1:18083/docs >/dev/null
+            then
+              echo "FastAPI respondeu."
+              exit 0
+            fi
+
+            sleep 1
+          done
+
+          echo "IA nao respondeu."
+          docker logs frota-ia-ci
+          exit 1
+
+      - name: Capture dependency versions
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          mkdir -p artifact
+
+          docker run \
+            --rm \
+            --entrypoint python \
+            "${{ steps.meta.outputs.image }}" \
+            -m pip freeze \
+            > artifact/requirements.lock.txt
+
+      - name: Export image
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          docker save \
+            "${{ steps.meta.outputs.image }}" \
+            -o "artifact/${{ steps.meta.outputs.archive }}"
+
+          cd artifact
+
+          sha256sum \
+            "${{ steps.meta.outputs.archive }}" \
+            > "${{ steps.meta.outputs.archive }}.sha256"
+
+      - name: Create manifest
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          cat > artifact/manifest.json <<EOF
+          {
+            "repository": "Frota-Contratada/frota-ia",
+            "component": "ia",
+            "commit": "${GITHUB_SHA}",
+            "shortCommit": "${{ steps.meta.outputs.short_sha }}",
+            "image": "${{ steps.meta.outputs.image }}",
+            "archive": "${{ steps.meta.outputs.archive }}",
+            "port": 8000
+          }
+          EOF
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: frota-ia-${{ steps.meta.outputs.short_sha }}
+          path: artifact/
+          if-no-files-found: error
+          retention-days: 14
