@@ -11,6 +11,7 @@ on:
       - "schemas/**"
       - "services/**"
       - "prompts/**"
+      - "tests/**"
       - ".github/workflows/build-image.yml"
   push:
     branches:
@@ -24,6 +25,7 @@ on:
       - "schemas/**"
       - "services/**"
       - "prompts/**"
+      - "tests/**"
       - ".github/workflows/build-image.yml"
 
   workflow_dispatch:
@@ -87,7 +89,6 @@ jobs:
           docker run \
             --rm \
             --env GROQ_API_KEY=ci-placeholder \
-            --env GROK_API_KEY=ci-placeholder \
             --env CONNECTION_DBGFC= \
             --entrypoint python \
             "${{ steps.meta.outputs.image }}" \
@@ -99,10 +100,22 @@ jobs:
           import pytesseract
           import PIL
           import groq
-          import xai_sdk
           from app.main import app
           print('Imports OK')
           "
+
+      - name: Test Groq stages and document-safe logging
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker run \
+            --rm \
+            --env GROQ_API_KEY=ci-placeholder \
+            --env CONNECTION_DBGFC= \
+            --volume "$PWD/tests:/app/tests:ro" \
+            --entrypoint python \
+            "${{ steps.meta.outputs.image }}" \
+            -m unittest discover -s tests -v
 
       - name: Smoke test
         shell: bash
@@ -113,7 +126,6 @@ jobs:
             --detach \
             --name frota-ia-ci \
             --env GROQ_API_KEY=ci-placeholder \
-            --env GROK_API_KEY=ci-placeholder \
             --env CONNECTION_DBGFC= \
             --env FROTA_ROOT_PATH=/ia \
             --publish 127.0.0.1:18083:8000 \

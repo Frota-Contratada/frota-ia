@@ -4,7 +4,7 @@ from app.config import settings
 from groq import Groq
 from services.database import get_tipos_veiculo, get_tipos_contrato
 
-client = Groq(api_key=settings.groq_api_key)
+client = Groq(api_key=settings.require_groq_api_key())
 
 caminho_prompt = Path(__file__).parent.parent / "prompts" / "extracao_prompt.txt"
 
@@ -30,7 +30,9 @@ def extrair_dados_contrato(texto: list[str] | str):
     try:
         print("[Groq] Enviando prompt para o Groq...")
         response = client.chat.completions.create(
-            model="openai/gpt-oss-120b",
+            model=settings.ai_extract_model,
+            response_format={"type": "json_object"},
+            reasoning_format="hidden",
             messages=[
                 {
                     "role": "system", 
@@ -56,4 +58,4 @@ def extrair_dados_contrato(texto: list[str] | str):
             "regras": [],
         }
     except Exception as e:
-        raise ValueError(f"Erro ao extrair dados do contrato: {e}")
+        raise ValueError(f"Erro ao extrair dados do contrato: {type(e).__name__}") from None
