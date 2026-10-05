@@ -1,9 +1,12 @@
+import logging
+
 from fastapi import APIRouter, File, HTTPException, UploadFile
 from services.processador_pdf import extrair_texto_pdf
 from services.extrator import extrair_dados_contrato
 from services.validador import validar_extracao
 
 extraction_router = APIRouter(prefix="/extrair", tags=["Extração"])
+logger = logging.getLogger(__name__)
 
 @extraction_router.post("/")
 async def extrair_texto(file: UploadFile = File(..., description="Arquivo PDF do contrato em buffer")):
@@ -29,7 +32,8 @@ async def extrair_texto(file: UploadFile = File(..., description="Arquivo PDF do
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Erro ao processar o arquivo PDF: {str(e)}")
 
-    print(paginas_extraidas)
+    logger.info("PDF text extracted: pages=%d characters=%d",
+                len(paginas_extraidas), sum(len(page) for page in paginas_extraidas))
     if not paginas_extraidas:
         raise HTTPException(status_code=400, detail="Falha na extração do texto do contrato.")
 

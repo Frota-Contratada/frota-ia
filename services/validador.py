@@ -1,7 +1,7 @@
 import json
 from pathlib import Path
 from app.config import settings
-from xai_sdk import Client
+from groq import Groq
 
 caminho_prompt = Path(__file__).parent.parent / "prompts" / "validacao_prompt.txt"
 
@@ -10,7 +10,7 @@ def carregar_prompt(caminho_prompt: str):
         return file.read()
 
 
-client = Client(api_key=settings.grok_api_key)
+client = Groq(api_key=settings.require_groq_api_key())
 
 def validar_extracao(dados_brutos: dict, texto_extraido: dict):
     template = carregar_prompt(caminho_prompt)
@@ -20,15 +20,17 @@ def validar_extracao(dados_brutos: dict, texto_extraido: dict):
 
     try:
         print("[Validador] Enviando prompt para o validador...")
-        resposta = client.chat.create(
-            model="grok-4.6",
+        resposta = client.chat.completions.create(
+            model=settings.ai_validator_model,
+            response_format={"type": "json_object"},
+            reasoning_format="hidden",
             messages=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": texto_extraido}
             ]
         )
 
-        template_json = resposta.text.strip()
+        template_json = resposta.choices[0].message.content.strip()
         template_json = template_json.removeprefix("```json").removesuffix("```").strip()
 
         dados_validados = json.loads(template_json)
@@ -46,6 +48,6 @@ def validar_extracao(dados_brutos: dict, texto_extraido: dict):
 
     except Exception as e:
         dados_brutos["extracao"]["observacoes"].append(
-            f"Validação indisponível: {str(e)}"
+            f"Validação indisponível: {type(e).__name__}"
         )
         return dados_brutos
